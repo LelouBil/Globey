@@ -129,6 +129,13 @@ async def invite(ctx):
       
 @client.event
 async def on_message(message):
+    if message.channel.name == "global-chat":
+        if message.author.bot == False:
+            channel = client.get_all_channels()
+            for i in channel:
+                await client.send_message(i, message.author)
+                await client.send_message(i, message.content)
+                await client.send_message(i, message.server)
     if message.content.startswith("cookie"):
         await client.send_message(message.channel, ":cookie:")
     if message.content.startswith("thinking"):
@@ -154,18 +161,7 @@ async def on_message(message):
     if message.content.startswith("nooo"):
         await client.send_message(message.channel, ":facepalm:")
     await client.process_commands(message)
-
-@client.event
-async def on_message(message):
-    if message.author.bot == False:
-        channel = Client.get_all_channels()
-        for i in channel:
-            print(i.name)
-            print(i.id)
-            await client.send_message(message.channel, message.author)
-            await client.send_message(message.channel, message.content)
-            await client.send_message(message.channel, message.server)
-
+    
 client.run("NDU2NDc4ODgyNTc3NjQ1NTY4.DryxQw.aP1IANFsvekqP8yHnvvEbaBy3wE") #token (secret)
 
 
