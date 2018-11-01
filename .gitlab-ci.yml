@@ -1,0 +1,30 @@
+before_script:
+   - docker info
+
+stages:
+- build
+- test
+- release
+
+variables:
+  DOCKER_IMAGE_TAG : "globey"
+  DOCKER_REALEASE_TAG : latest
+
+build_image:
+  stage: build
+  script:
+     - "docker build -t $DOCKER_IMAGE_TAG:$CI_COMMIT_REF_SLUG ."
+
+
+test_bot:
+  stage: test
+  script:
+  - "echo testing"
+  #todo
+
+release_image:
+  stage: release
+  script:
+  - "docker tag $DOCKER_IMAGE_TAG:$CI_COMMIT_REF_SLUG $DOCKER_IMAGE_TAG:$DOCKER_REALEASE_TAG"
+  only:
+  - tags
