@@ -159,7 +159,11 @@ async def on_message(message):
             channel = client.get_all_channels()
             for i in channel:
                 if i.name == "global-chat" and i.type != discord.channel.ChannelType.private:
-                    await client.send_message(i, f"**[{message.author}@{message.server}]** `{message.content}`")
+                    try:
+                        await client.send_message(i, f"**[{message.author}@{message.server}]** `{message.content}`")
+                    except discord.errors.Forbidden:
+                        print(f"forbidden channel : {i.name}@{i.server.name}")
+
     if message.content.startswith("cookie"):
         await client.send_message(message.channel, ":cookie:")
     if message.content.startswith("thinking"):
