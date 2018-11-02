@@ -1,6 +1,7 @@
 import asyncio
 import discord
 from discord.ext import commands
+import sqlite3
 import random
 
 import time
@@ -8,10 +9,68 @@ import time
 Client = discord.Client
 client = commands.Bot(command_prefix="_")
 
+sqlite = sqlite3.connect("/storage/database.db")
+cursor = sqlite.cursor()
+cursor.execute("""
+
+CREATE TABLE IF NOT EXISTS servers
+(
+ `server_id`   int NOT NULL,
+ `server_name` text NOT NULL ,
+
+PRIMARY KEY (`server_id`)
+);
+""")
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS global_channels (
+    channel_id integer NOT NULL,
+    server_id integer NOT NULL
+, channel_name TEXT NOT NULL,
+PRIMARY KEY (`channel_id`),
+FOREIGN KEY(server_id) REFERENCES servers(server_id)
+);
+""")
+
+
+def getCursor():
+    return sqlite.cursor()
+
+
+def register_server(srv: discord.server.Server):
+    name = srv.name
+    idd = srv.id
+    getCursor().execute("INSERT INTO servers (server_id,server_name) VALUES (?,?)", (idd, name))
+    sqlite.commit()
+
+
+def register_channel(chan: discord.server.Channel):
+    name = chan.name
+    idd = chan.id
+    srvid = chan.server.id
+    getCursor().execute("INSERT INTO global_channels (channel_id,channel_name,server_id) VALUES (:id,:name,:srvid)",
+                        {"id": idd, "name": name, "srvid": srvid})
+    sqlite.commit()
+
+
+def unregister_channel(chan: discord.server.Channel):
+    idd = chan.id
+    getCursor().execute(f"DELETE FROM global_channels WHERE channel_id=:id", {"id": idd})
+    sqlite.commit()
+
+
+def registered(srv: discord.server.Server):
+    c = getCursor()
+    c.execute(f"SELECT EXISTS(SELECT 1 FROM servers WHERE server_id={srv.id})")
+    return c.fetchone() == (1,)
+
 
 @client.event
 async def on_ready():
     print("Bot Is Online!")
+    for srv in client.servers:
+        if not registered(srv):
+            print("registering server : " + srv.name)
+            register_server(srv)
     await client.change_presence(game=discord.Game(name="linking people"))
 
 
@@ -146,33 +205,106 @@ async def spam(ctx):
     await client.say(" ")
     await client.say(" ")
 
+
 @client.command(pass_context=True)
 async def globaldef(ctx):
+    if isglobal(ctx.message.channel):
+        await client.say("This channel is already global !")
+        return
     await client.say("this channel is now set as a global channel")
-    channel = client.get_channel #here I get the channel
-    print(channel) #put in data base
-    
+    channel = ctx.message.channel  # here I get the channel
+    register_channel(channel)
+
+
 @client.command(pass_context=True)
 async def globalstop(ctx):
+    if not isglobal(ctx.message.channel):
+        await client.say("This channel is not global !")
+        return
     await client.say("this channel is not anymore set as a global channel")
-    #here just erease from database
-    
+    channel = ctx.message.channel
+    unregister_channel(channel)
+
+
 @client.command(pass_context=True)
 async def invite(ctx):
     await client.say("https://discordapp.com/api/oauth2/authorize?client_id=456478882577645568&permissions=8&scope=bot")
 
 
+def getGlobalChannels():
+    c = getCursor()
+    c.execute("SELECT * FROM global_channels")
+    rows = c.fetchall()
+    channels = list()
+    for row in rows:
+        cid = row[0]
+        sid = row[1]
+        chanel = client.get_server(str(sid)).get_channel(str(cid))
+        channels.append(chanel)
+    return channels
+
+
+def isglobal(channel: discord.channel.Channel):
+    c = getCursor()
+    c.execute(f"SELECT EXISTS(SELECT 1 FROM global_channels WHERE channel_id={channel.id})")
+    return c.fetchone() == (1,)
+
+
+noRepeat = {"_globaldef", "_globalstop"}
+
+# regexes
+import re
+
+mentionreg = re.compile("<@(\d+)>")
+
+everyhere = re.compile("(@)(everyone|here)")
+
+linkreg = re.compile("(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?")
+
+
+async def filterMessage(content: str):
+    matchobj = mentionreg.search(content)
+    if matchobj is not None:
+        toreplace = matchobj.group()
+        id = matchobj.group(1)
+        print("mention of : " + id + " ---- " + toreplace)
+        user = await client.get_user_info(str(id))
+        username = str(user)
+        content = content.replace(toreplace, username)
+        # fin mentions
+
+    # links
+
+    match = linkreg.search(content)
+    if match is not None:
+        link = match.group()
+        content = content.replace(link, "_[link are disabled here]_")
+
+    #everyHere
+
+    ma = everyhere.search(content)
+    if ma is not None:
+        tore = ma.group(1)
+        ot = ma.group(2)
+        #print("mention of : " + id + " ---- " + toreplace)
+        content = content.replace(ma.group(), tore + " " + ot)
+        # fin mentions
+    return content
+
+
 @client.event
 async def on_message(message):
-    if message.channel.name == "global-chat":
-        if not message.author.bot:
-            channel = client.get_all_channels()
-            for i in channel:
-                if i.name == "global-chat" and i.type != discord.channel.ChannelType.private:
-                    try:
-                        await client.send_message(i, f"**[{message.author}@{message.server}]** `{message.content}`")
-                    except discord.errors.Forbidden:
-                        print(f"forbidden channel : {i.name}@{i.server.name}")
+    if isglobal(message.channel):
+        if not noRepeat.__contains__(message.content):
+            filtered = await filterMessage(message.content)
+            if not message.author.bot:
+                channel = getGlobalChannels()
+                for i in channel:
+                    if i.type != discord.channel.ChannelType.private:
+                        try:
+                            await client.send_message(i, f"**[{message.author}@{message.server}]** {filtered}")
+                        except discord.errors.Forbidden:
+                            print(f"forbidden channel : {i.name}@{i.server.name}")
 
     if message.content.startswith("cookie"):
         await client.add_reaction(message,"\N{COOKIE}")
