@@ -9,6 +9,8 @@ stages:
 variables:
   DOCKER_IMAGE_TAG : "globey"
   DOCKER_REALEASE_TAG : latest
+  GET_SOURCES_ATTEMPTS: "10"
+
 
 build_image:
   stage: build
