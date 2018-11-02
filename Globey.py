@@ -201,13 +201,14 @@ async def spam(ctx):
 @client.command(pass_context=True)
 async def globaldef(ctx):
     await client.say("this channel is now set as a global channel")
-    channel = client.get_channel #here I get the channel
-    print(channel) #put in data base
+    channel = ctx.message.channel #here I get the channel
+    register_channel(channel)
     
 @client.command(pass_context=True)
 async def globalstop(ctx):
     await client.say("this channel is not anymore set as a global channel")
-    #here just erease from database
+    channel = ctx.message.channel
+    unregister_channel(channel)
     
 @client.command(pass_context=True)
 async def invite(ctx):
