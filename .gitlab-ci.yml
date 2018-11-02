@@ -1,6 +1,10 @@
 before_script:
+   - git clone http://gitlab-runner:$GITLABRUNNER_USER_AUTH_TOKEN@server/${CI_PROJECT_PATH}.git /tmp/
+   - cd /tmp/globey
    - docker info
 
+after_script:
+   - rm -r /tmp/globey
 stages:
 - build
 - test
