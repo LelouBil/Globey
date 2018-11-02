@@ -1,6 +1,7 @@
 import asyncio
 import discord
 from discord.ext import commands
+import sqlite3
 import random
 
 import time
@@ -8,10 +9,61 @@ import time
 Client = discord.Client
 client = commands.Bot(command_prefix="_")
 
+sqlite = sqlite3.connect("/app/database.db")
+cursor = sqlite.cursor()
+cursor.execute("""
+
+CREATE TABLE IF NOT EXISTS servers
+(
+ `server_id`   int NOT NULL,
+ `server_name` text NOT NULL ,
+
+PRIMARY KEY (`server_id`)
+);
+
+CREATE TABLE IF NOT EXISTS global_channels (
+    channel_id integer NOT NULL,
+    server_id integer NOT NULL
+, channel_name TEXT NOT NULL,
+PRIMARY KEY (`channel_id`),
+FOREIGN KEY(server_id) REFERENCES servers(server_id)
+);
+""")
+def getCursor():
+    return sqlite.cursor()
+
+def register_server(srv : discord.server.Server):
+    name = srv.name
+    idd = srv.id
+    getCursor().execute(f"INSERT INTO `servers` (server_id,server_name) VALUES ({idd},{name})")
+    sqlite.commit()
+
+def register_channel(chan : discord.server.Channel):
+    name = chan.name
+    idd = chan.id
+    srvid = chan.server.id
+    getCursor().execute(f"INSERT INTO `global_channels` (channel_id,channel_name,server_id) VALUES ({idd},{name},{srvid})")
+    sqlite.commit()
+
+def unregister_channel(chan : discord.server.Channel):
+    idd = chan.id
+    getCursor().execute(f"DELETE FROM global_channels WHERE channel_id={idd}")
+    sqlite.commit()
+
+
+def registered(srv : discord.server.Server):
+    c = getCursor()
+    c.execute(f"SELECT EXISTS(SELECT 1 FROM servers WHERE server_id={srv.id})")
+    return c.fetchone()
 
 @client.event
 async def on_ready():
+
     print("Bot Is Online!")
+    for srv in client.server:
+        if not registered(srv):
+            print("registering server : " + srv.name)
+            register_server(srv)
     await client.change_presence(game=discord.Game(name="linking people"))
 
 
@@ -152,11 +204,24 @@ async def invite(ctx):
     await client.say("https://discordapp.com/api/oauth2/authorize?client_id=456478882577645568&permissions=8&scope=bot")
 
 
+def getGlobalChannels():
+    c = getCursor()
+    c.execute("SELECT * FROM global_channels")
+    rows = c.fetchall()
+    channels = list()
+    for row in rows:
+        cid = row[0]
+        sid = row[1]
+        chanel = client.get_server(sid).get_channel(cid)
+        channels.append(chanel)
+    return channels
+
 @client.event
 async def on_message(message):
     if message.channel.name == "global-chat":
         if not message.author.bot:
-            channel = client.get_all_channels()
+            #channel = client.get_all_channels()
+            channel = getGlobalChannels()
             for i in channel:
                 if i.name == "global-chat" and i.type != discord.channel.ChannelType.private:
                     try:
@@ -180,7 +245,9 @@ async def on_message(message):
                 return await client.add_reaction(message, x)
     if message.content.startswith("help"):
         embed2 = discord.Embed(title="**Help menu**",
-                               description=f"**Hello {message.author.name}, here are all comands (with prefix_):** \n hi, invite, server, redriot, amiuseful, spam, invite. \n **admin command:**\n ban, warn, kick",
+                               description=f"**Hello {message.author.name}, here are all comands (with prefix_):** \n"
+                                           f" hi, invite, server, redriot, amiuseful, spam, invite. \n "
+                                           f"**admin command:**\n ban, warn, kick",
                                color=message.author.color)
         embed2.set_thumbnail(url=message.author.avatar_url)
         embed2.set_footer(text="send by god")
