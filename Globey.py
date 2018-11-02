@@ -122,7 +122,7 @@ async def redriot(ctx):
     await client.say("is my **creator**")
 
 
-@client.command(pass_context=True, hidden=True)
+1@client.command(pass_context=True, hidden=True)
 async def master(ctx):
     if ctx.message.author.id == "407938385190060044" or ctx.message.author.id == "388192128607584256":
         await client.say("Hi master :leaves:")
@@ -158,7 +158,7 @@ async def on_message(message):
         if not message.author.bot:
             channel = client.get_all_channels()
             for i in channel:
-                if i.name == "global-chat" and i.type != discord.channel.ChannelType.private and message.content != :
+                if i.name == "global-chat" and i.type != discord.channel.ChannelType.private and message.content != "" :
                     await client.send_message(i, f"**[{message.author}@{message.server}]** `{message.content}`")
     if message.content.startswith("cookie"):
         await client.send_message(message.channel, ":cookie:")
