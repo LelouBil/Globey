@@ -35,7 +35,7 @@ async def ping(ctx):
 
 @client.command(pass_context=True, hidden=True)
 async def shutdown(ctx):
-    if ctx.message.author.id == "407938385190060044" or ctx.message.author.id == "388192128607584256":
+    if ctx.message.author.id == "407938385190060044" or ctx.message.author.id == "388192128607584256" or ctx.message.author.id == "203874311696547851":
         await client.say("im shutting down, goodbye!")
         await client.logout()
     else:
@@ -124,7 +124,7 @@ async def redriot(ctx):
 
 @client.command(pass_context=True, hidden=True)
 async def master(ctx):
-    if ctx.message.author.id == "407938385190060044" or ctx.message.author.id == "388192128607584256":
+    if ctx.message.author.id == "407938385190060044" or ctx.message.author.id == "388192128607584256" or ctx.message.author.id == "203874311696547851":
         await client.say("Hi master :leaves:")
     else:
         await client.say("Hey wait a minute, you aren't my master!!! :scream:")
@@ -146,7 +146,17 @@ async def spam(ctx):
     await client.say(" ")
     await client.say(" ")
 
-
+@client.command(pass_context=True)
+async def globaldef(ctx):
+    await client.say("this channel is now set as a global channel")
+    channel = client.get_channel #here I get the channel
+    print(channel) #put in data base
+    
+@client.command(pass_context=True)
+async def globalstop(ctx):
+    await client.say("this channel is not anymore set as a global channel")
+    #here just erease from database
+    
 @client.command(pass_context=True)
 async def invite(ctx):
     await client.say("https://discordapp.com/api/oauth2/authorize?client_id=456478882577645568&permissions=8&scope=bot")
