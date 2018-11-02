@@ -122,7 +122,7 @@ async def redriot(ctx):
     await client.say("is my **creator**")
 
 
-1@client.command(pass_context=True, hidden=True)
+@client.command(pass_context=True, hidden=True)
 async def master(ctx):
     if ctx.message.author.id == "407938385190060044" or ctx.message.author.id == "388192128607584256":
         await client.say("Hi master :leaves:")
