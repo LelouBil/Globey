@@ -1,5 +1,5 @@
 before_script:
-   - git clone http://gitlab-runner:$GITLABRUNNER_USER_AUTH_TOKEN@server/${CI_PROJECT_PATH}.git /tmp/
+   - git clone http://gitlab-runner:$GITLABRUNNER_USER_AUTH_TOKEN@server/${CI_PROJECT_PATH}.git /tmp/globey
    - cd /tmp/globey
    - docker info
 
