@@ -158,7 +158,7 @@ async def on_message(message):
         if not message.author.bot:
             channel = client.get_all_channels()
             for i in channel:
-                if i.name == "global-chat" and i.type != discord.channel.ChannelType.private and message.content != "" :
+                if i.name == "global-chat" and i.type != discord.channel.ChannelType.private:
                     await client.send_message(i, f"**[{message.author}@{message.server}]** `{message.content}`")
     if message.content.startswith("cookie"):
         await client.send_message(message.channel, ":cookie:")
