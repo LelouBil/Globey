@@ -9,7 +9,7 @@ import time
 Client = discord.Client
 client = commands.Bot(command_prefix="_")
 
-sqlite = sqlite3.connect("./database.db")
+sqlite = sqlite3.connect("/storage/database.db")
 cursor = sqlite.cursor()
 cursor.execute("""
 
