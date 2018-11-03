@@ -326,11 +326,11 @@ async def on_message(message):
         embed2.set_footer(text="send by god")
         await client.send_message(message.channel, embed=embed2)
     if message.content.startswith("party"):
-        await client.add_reaction(message,"\N{TADA}")
+        await client.add_reaction(message,"508249425634787340")
     if message.content.startswith("lol"):
-        await client.add_reaction(message,"\N{ROLF}")
+        await client.add_reaction(message,"508252793610698752")
     if message.content.startswith("no"):
-        await client.add_reaction(message,"\N{FACEPALM}")
+        await client.add_reaction(message,"508252964503420933")
     await client.process_commands(message)
 
 
