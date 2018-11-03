@@ -1,3 +1,4 @@
+#!/bin/env python3
 import asyncio
 import discord
 from discord.ext import commands
@@ -31,15 +32,28 @@ FOREIGN KEY(server_id) REFERENCES servers(server_id)
 );
 """)
 
+emojis = {"tada": "", "facepalm": "", "rolf": ""}
 
-def getCursor():
+
+def update_emojis():
+    print("updating emojis")
+    for srv in client.servers:
+        print("server : " + srv.name)
+        for emoji in srv.emojis:
+            print("emojii : " + emoji.name)
+            if emojis.__contains__(emoji.name):
+                print(f"registering emoji : " + emoji.name)
+                emojis[emoji.name] = emoji
+
+
+def get_cursor():
     return sqlite.cursor()
 
 
 def register_server(srv: discord.server.Server):
     name = srv.name
     idd = srv.id
-    getCursor().execute("INSERT INTO servers (server_id,server_name) VALUES (?,?)", (idd, name))
+    get_cursor().execute("INSERT INTO servers (server_id,server_name) VALUES (?,?)", (idd, name))
     sqlite.commit()
 
 
@@ -47,31 +61,32 @@ def register_channel(chan: discord.server.Channel):
     name = chan.name
     idd = chan.id
     srvid = chan.server.id
-    getCursor().execute("INSERT INTO global_channels (channel_id,channel_name,server_id) VALUES (:id,:name,:srvid)",
-                        {"id": idd, "name": name, "srvid": srvid})
+    get_cursor().execute("INSERT INTO global_channels (channel_id,channel_name,server_id) VALUES (:id,:name,:srvid)",
+                         {"id": idd, "name": name, "srvid": srvid})
     sqlite.commit()
 
 
 def unregister_channel(chan: discord.server.Channel):
     idd = chan.id
-    getCursor().execute(f"DELETE FROM global_channels WHERE channel_id=:id", {"id": idd})
+    get_cursor().execute(f"DELETE FROM global_channels WHERE channel_id=:id", {"id": idd})
     sqlite.commit()
 
 
 def registered(srv: discord.server.Server):
-    c = getCursor()
+    c = get_cursor()
     c.execute(f"SELECT EXISTS(SELECT 1 FROM servers WHERE server_id={srv.id})")
     return c.fetchone() == (1,)
 
 
 @client.event
 async def on_ready():
-    print("Bot Is Online!")
     for srv in client.servers:
         if not registered(srv):
             print("registering server : " + srv.name)
             register_server(srv)
+    update_emojis()
     await client.change_presence(game=discord.Game(name="linking people"))
+    print("Bot Is Online!")
 
 
 @client.command(pass_context=True)
@@ -232,7 +247,7 @@ async def invite(ctx):
 
 
 def getGlobalChannels():
-    c = getCursor()
+    c = get_cursor()
     c.execute("SELECT * FROM global_channels")
     rows = c.fetchall()
     channels = list()
@@ -245,7 +260,7 @@ def getGlobalChannels():
 
 
 def isglobal(channel: discord.channel.Channel):
-    c = getCursor()
+    c = get_cursor()
     c.execute(f"SELECT EXISTS(SELECT 1 FROM global_channels WHERE channel_id={channel.id})")
     return c.fetchone() == (1,)
 
@@ -280,13 +295,13 @@ async def filterMessage(content: str):
         link = match.group()
         content = content.replace(link, "_[link are disabled here]_")
 
-    #everyHere
+    # everyHere
 
     ma = everyhere.search(content)
     if ma is not None:
         tore = ma.group(1)
         ot = ma.group(2)
-        #print("mention of : " + id + " ---- " + toreplace)
+        # print("mention of : " + id + " ---- " + toreplace)
         content = content.replace(ma.group(), tore + " " + ot)
         # fin mentions
     return content
@@ -307,7 +322,7 @@ async def on_message(message):
                             print(f"forbidden channel : {i.name}@{i.server.name}")
 
     if message.content.startswith("cookie"):
-        await client.add_reaction(message,"\N{COOKIE}")
+        await client.add_reaction(message, "\N{COOKIE}")
     if message.content.startswith("hello"):
         embed1 = discord.Embed(title="Hello :wave:", description=f"Hello {message.author.name}, How are you?",
                                color=message.author.color)
@@ -320,18 +335,23 @@ async def on_message(message):
                 return await client.add_reaction(message.channel, i)
     if message.content.startswith("help"):
         embed2 = discord.Embed(title="**Help menu**",
-                               description=f"**Hello {message.author.name}, here are all comands (with prefix_):** \n hi, invite, server, redriot, amiuseful, spam, invite. \n **admin command:**\n ban, warn, kick",
+                               description=f"**Hello {message.author.name}, here are all comands (with prefix_):** \n"
+                                           f"hi, invite, server, redriot, amiuseful, spam, invite. \n"
+                                           f"**admin command:**\n"
+                                           f"ban, warn, kick",
                                color=message.author.color)
         embed2.set_thumbnail(url=message.author.avatar_url)
         embed2.set_footer(text="send by god")
         await client.send_message(message.channel, embed=embed2)
     if message.content.startswith("party"):
-        await client.add_reaction(message,"508249425634787340")
+        await client.add_reaction(message, "\N{Party Popper}")
     if message.content.startswith("lol"):
-        await client.add_reaction(message,"508252793610698752")
+        await client.add_reaction(message, "\N{Rolling on the Floor Laughing}")
     if message.content.startswith("no"):
-        await client.add_reaction(message,"508252964503420933")
+        await client.add_reaction(message, "\N{Face Palm}")
     await client.process_commands(message)
 
-
-client.run("NDU2NDc4ODgyNTc3NjQ1NTY4.DryxQw.aP1IANFsvekqP8yHnvvEbaBy3wE")  # token (secret)
+tokenfile = open(".token","r")
+token = tokenfile.readline()
+tokenfile.close()
+client.run(token)
