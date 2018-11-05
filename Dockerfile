@@ -4,9 +4,11 @@ WORKDIR /app
 
 RUN mkdir /storage
 
-ADD .token /app
-
 ADD requirements.txt /app
+
+RUN apk add py-numpy
+
+RUN pip3 install --upgrade setuptools
 
 RUN pip3 install -r requirements.txt
 
