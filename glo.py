@@ -7,14 +7,15 @@ import shutil
 """
 glo helper script
 """
-
+dockervars = '-e GLOBEY_TOKEN='
 dockerpath = "/usr/bin/docker"
+windockerpath = "C:\Program Files\Docker Toolbox\docker.exe"
 imagename = "globey"
 
 tokenfile = ".glo-token"
 
 testfile = ".test-token"
-if not os.path.isfile(dockerpath):
+if not os.path.isfile(dockerpath) and not os.path.isfile(windockerpath):
     print("You don't have docker installed !")
     exit(1)
 
@@ -35,7 +36,6 @@ def build():
     current = os.getcwd()
     cmd = f"docker build -t {imagename} {current}"
     call(cmd.split(" "))
-    os.remove(".token")
     print(f"building finished !")
 
 
@@ -44,7 +44,12 @@ def run():
         os.mkdir(os.getcwd() + "/storage/")
 
     sto = os.getcwd() + "/storage/"
-    cmd = f"docker run -v {sto}:/storage/ --rm -ti {imagename}"
+    if os.name == "nt":
+        print("win")
+        sto = sto.replace("\\", "/")
+        sto = sto.replace("C:", "/c")
+    cmd = f"docker run -v {sto}:/storage/ {dockervars} --rm -ti {imagename}"
+    print("calling : " + cmd)
     call(cmd.split(" "))
 
 
@@ -62,11 +67,18 @@ switcher = {
     "run": run,
     "brun": brun
 }
+
+
+def readToken(param):
+    file = open(param,"r")
+    return file.readline()
+
+
 if testing:
-    shutil.copy2('.test-token', ".token")
+    dockervars += readToken(".test-token")
     imagename += ":testing"
 else:
-    shutil.copy2(".glo-token", ".token")
+    dockervars += readToken(".glo-token")
 func = switcher.get(action, noact)
 print(os.getcwd())
 func()

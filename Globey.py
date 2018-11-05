@@ -6,6 +6,8 @@ import sqlite3
 import random
 
 import time
+import numpy as np
+import os
 
 Client = discord.Client
 client = commands.Bot(command_prefix="_")
@@ -32,18 +34,38 @@ FOREIGN KEY(server_id) REFERENCES servers(server_id)
 );
 """)
 
-emojis = {"tada": "", "facepalm": "", "rolf": ""}
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS server_preferences(
+    pref_key TEXT NOT NULL,
+    pref_value TEXT NOT NULL,
+    server_id integer NOT NULL,
+    FOREIGN KEY(server_id) REFERENCES servers(server_id),
+    PRIMARY KEY(pref_key,server_id)
+);
+""")
 
 
-def update_emojis():
-    print("updating emojis")
-    for srv in client.servers:
-        print("server : " + srv.name)
-        for emoji in srv.emojis:
-            print("emojii : " + emoji.name)
-            if emojis.__contains__(emoji.name):
-                print(f"registering emoji : " + emoji.name)
-                emojis[emoji.name] = emoji
+def get_preference(server, key: str):
+    if server is discord.Server:
+        server = server.id
+
+    if server is not int:
+        raise TypeError
+
+    c = get_cursor()
+    c.execute("SELECT 1 FROM server_preferences WHERE server_id=? AND pref_key=?", {server, key})
+    return c.fetchone()[1]
+
+
+def set_preference(server, key: str, value: str):
+    if server is discord.Server:
+        server = server.id
+
+    if server is not int:
+        raise TypeError
+    get_cursor().execute("INSERT INTO server_preferences (pref_key,pref_value,server_id) VALUES (?,?,?)",
+                         {key, value, server})
+    sqlite.commit()
 
 
 def get_cursor():
@@ -57,7 +79,12 @@ def register_server(srv: discord.server.Server):
     sqlite.commit()
 
 
-def register_channel(chan: discord.server.Channel):
+async def delete_server(srv):
+    get_cursor().execute("DELETE FROM servers WHERE server_id=?", (srv))
+    sqlite.commit()
+
+
+async def register_channel(chan: discord.server.Channel):
     name = chan.name
     idd = chan.id
     srvid = chan.server.id
@@ -66,27 +93,75 @@ def register_channel(chan: discord.server.Channel):
     sqlite.commit()
 
 
-def unregister_channel(chan: discord.server.Channel):
+async def unregister_channel(chan: discord.server.Channel):
     idd = chan.id
     get_cursor().execute(f"DELETE FROM global_channels WHERE channel_id=:id", {"id": idd})
     sqlite.commit()
 
 
-def registered(srv: discord.server.Server):
+async def registered(srv: discord.server.Server):
     c = get_cursor()
     c.execute(f"SELECT EXISTS(SELECT 1 FROM servers WHERE server_id={srv.id})")
     return c.fetchone() == (1,)
 
 
+async def get_all_servers():
+    c = get_cursor()
+    c.execute("SELECT * FROM servers")
+    rows = c.fetchall()
+    for row in rows:
+        yield row[0]
+
+
+async def remove_servers(diff):
+    for s in diff:
+        await delete_server(int(await s))
+
+
+async def add_servers(diff):
+    for s in diff:
+        sarv = client.get_server(s)
+        register_server(sarv)
+
+
 @client.event
 async def on_ready():
-    for srv in client.servers:
-        if not registered(srv):
-            print("registering server : " + srv.name)
-            register_server(srv)
-    update_emojis()
-    await client.change_presence(game=discord.Game(name="linking people"))
+    db = get_all_servers()
+    current = list(map(lambda s: s.id, client.servers))
+
+    diff = np.setdiff1d(db, current)
+
+    await remove_servers(diff)
+
+    diff = np.setdiff1d(current, db)
+
+    await add_servers(diff)
+    update_counter()
     print("Bot Is Online!")
+
+
+@client.event
+async def on_server_join(server):
+    register_server(server)
+    update_counter(1)
+
+
+counter = 0
+
+
+def update_counter(param: int = 0):
+    global counter
+    if counter == 0:
+        counter = len(client.servers)
+    else:
+        counter += param
+    client.change_presence(game=discord.Game(name=f"linking people on {counter} servers"))
+
+
+@client.event
+async def on_server_remove(server):
+    await delete_server(int(server.id))
+    update_counter(-1)
 
 
 @client.command(pass_context=True)
@@ -238,7 +313,7 @@ async def globalstop(ctx):
         return
     await client.say("this channel is not anymore set as a global channel")
     channel = ctx.message.channel
-    unregister_channel(channel)
+    await unregister_channel(channel)
 
 
 @client.command(pass_context=True)
@@ -246,7 +321,7 @@ async def invite(ctx):
     await client.say("https://discordapp.com/api/oauth2/authorize?client_id=456478882577645568&permissions=8&scope=bot")
 
 
-def getGlobalChannels():
+def get_global_channels():
     c = get_cursor()
     c.execute("SELECT * FROM global_channels")
     rows = c.fetchall()
@@ -313,7 +388,7 @@ async def on_message(message):
         if not noRepeat.__contains__(message.content):
             filtered = await filterMessage(message.content)
             if not message.author.bot:
-                channel = getGlobalChannels()
+                channel = get_global_channels()
                 for i in channel:
                     if i.type != discord.channel.ChannelType.private:
                         try:
@@ -351,7 +426,6 @@ async def on_message(message):
         await client.add_reaction(message, "\N{Face Palm}")
     await client.process_commands(message)
 
-tokenfile = open(".token","r")
-token = tokenfile.readline()
-tokenfile.close()
+
+token = os.environ['GLOBEY_TOKEN']
 client.run(token)
