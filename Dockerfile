@@ -17,3 +17,5 @@ ENTRYPOINT python3 -m Globey
 ADD Globey /app/Globey
 
 ADD reactions.ini /app/
+
+ADD globes /app/globes
