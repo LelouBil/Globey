@@ -1,2 +1,4 @@
 .idea/
 storage/
+database.db
+*.db
