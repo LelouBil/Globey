@@ -12,6 +12,8 @@ RUN pip3 install --upgrade setuptools
 
 RUN pip3 install -r requirements.txt
 
-ENTRYPOINT python3 Globey.py
+ENTRYPOINT python3 -m Globey
 
-ADD Globey.py /app
+ADD Globey /app/Globey
+
+ADD reactions.ini /app/
