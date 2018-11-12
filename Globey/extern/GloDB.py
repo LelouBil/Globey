@@ -72,7 +72,7 @@ class GloDB:
 
     def delete_server(self, srv) -> None:
         print("deleting : " + str(srv))
-        self.get_cursor().execute("DELETE FROM servers WHERE server_id=?", {str(srv)})
+        self.get_cursor().execute("DELETE FROM servers WHERE server_id=" + srv)
         self.sqlite.commit()
 
     def register_channel(self, chan: discord.server.Channel) -> None:
