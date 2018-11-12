@@ -8,7 +8,8 @@ class GloDB:
     sqlite: sqlite3.Connection = None
 
     def __init__(self):
-        self.sqlite = sqlite3.connect("/storage/database.db" if not os.environ.get("GLOBEY_TEST") else "./database.db")
+        self.sqlite = sqlite3.connect("/storage/database.db" if not os.environ.get("GLOBEY_TEST") else "./storage"
+                                                                                                       "/database.db")
         cursor = self.sqlite.cursor()
         cursor.executescript("""
 
@@ -103,9 +104,11 @@ class GloDB:
         c.execute("SELECT * FROM servers")
         rows = c.fetchall()
         for row in rows:
-            srv = Globey.client.get_server(str(row))
+            srv = Globey.client.get_server(str(row[0]))
             if srv is None:
+                print(str(row[0]) + " is none")
                 self.delete_server(row[0])
+                continue
             yield str(row[0])
 
     def get_global_channels(self) -> list:
@@ -119,7 +122,6 @@ class GloDB:
             srv = Globey.client.get_server(str(sid))
             if srv is None:
                 self.delete_server(sid)
-                self.unregister_channel_id(cid)
                 continue
             chanel = srv.get_channel(str(cid))
             if chanel is None:
