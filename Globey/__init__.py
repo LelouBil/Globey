@@ -47,6 +47,7 @@ async def on_ready():
     await add_servers(diff)
     DB.get_global_channels()
     update_counter()
+
     print("Bot Is Online!")
 
 
