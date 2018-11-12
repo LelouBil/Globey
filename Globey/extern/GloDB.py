@@ -105,7 +105,7 @@ class GloDB:
         for row in rows:
             srv = Globey.client.get_server(str(row))
             if srv is None:
-                self.delete_server(row)
+                self.delete_server(row[0])
             yield str(row[0])
 
     def get_global_channels(self) -> list:
