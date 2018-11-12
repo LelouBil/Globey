@@ -70,9 +70,9 @@ class GloDB:
         self.get_cursor().execute("INSERT INTO servers (server_id,server_name) VALUES (?,?)", (idd, name))
         self.commit()
 
-    def delete_server(self, srv) -> None:
+    def delete_server(self, srv: int) -> None:
         print("deleting : " + str(srv))
-        self.get_cursor().execute("DELETE FROM servers WHERE server_id=" + srv)
+        self.get_cursor().execute("DELETE FROM servers WHERE server_id=" + str(srv))
         self.sqlite.commit()
 
     def register_channel(self, chan: discord.server.Channel) -> None:
@@ -88,7 +88,7 @@ class GloDB:
         idd = chan.id
         self.unregister_channel_id(idd)
 
-    def unregister_channel_id(self,id):
+    def unregister_channel_id(self, id):
         self.get_cursor().execute(f"DELETE FROM global_channels WHERE channel_id=:id", {"id": id})
         self.sqlite.commit()
 
