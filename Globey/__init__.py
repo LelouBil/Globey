@@ -45,6 +45,7 @@ async def on_ready():
     diff = np.setdiff1d(current, db)
 
     await add_servers(diff)
+    DB.get_global_channels()
     update_counter()
     print("Bot Is Online!")
 
