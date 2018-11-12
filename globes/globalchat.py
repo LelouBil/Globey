@@ -68,7 +68,7 @@ class GlobalChat:
     async def on_message(self, message: discord.client.Message):
         if DB.is_global(message.channel):
             cmds = client.commands.keys()
-            if not str(message.content).startswith(client.command_prefix) \
+            if not str(message.content).startswith(client.command_prefix)\
                     and not \
                     cmds.__contains__(str(message.content).replace(client.command_prefix, "", 1)):
                 filtered = await self.filterMessage(message.content)

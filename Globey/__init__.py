@@ -3,6 +3,7 @@ import traceback
 from os import listdir
 from os.path import isfile, join
 import Globey.control
+
 import discord
 import numpy as np
 from discord.ext import commands
