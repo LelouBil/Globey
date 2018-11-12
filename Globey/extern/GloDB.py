@@ -73,6 +73,7 @@ class GloDB:
     def delete_server(self, srv: int) -> None:
         print("deleting : " + str(srv))
         self.get_cursor().execute("DELETE FROM servers WHERE server_id=" + str(srv))
+        self.get_cursor().execute("DELETE FROM global_channels WHERE server_id=" + str(srv))
         self.sqlite.commit()
 
     def register_channel(self, chan: discord.server.Channel) -> None:
@@ -102,6 +103,9 @@ class GloDB:
         c.execute("SELECT * FROM servers")
         rows = c.fetchall()
         for row in rows:
+            srv = Globey.client.get_server(str(row))
+            if srv is None:
+                self.delete_server(row)
             yield str(row[0])
 
     def get_global_channels(self) -> list:
@@ -115,10 +119,11 @@ class GloDB:
             srv = Globey.client.get_server(str(sid))
             if srv is None:
                 self.delete_server(sid)
+                self.unregister_channel_id(cid)
                 continue
             chanel = srv.get_channel(str(cid))
             if chanel is None:
-                self.unregister_channel_id(chanel)
+                self.unregister_channel_id(cid)
                 continue
             channels.append(chanel)
         return channels
