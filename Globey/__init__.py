@@ -2,7 +2,7 @@ import os
 import traceback
 from os import listdir
 from os.path import isfile, join
-
+import Globey.control
 import discord
 import numpy as np
 from discord.ext import commands
@@ -33,6 +33,7 @@ async def add_servers(diff):
 
 @client.event
 async def on_ready():
+    control.onload()
     db = list(DB.get_all_servers())
     current = list(map(lambda s: s.id, client.servers))
 

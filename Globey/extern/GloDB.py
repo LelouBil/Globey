@@ -86,7 +86,10 @@ class GloDB:
 
     def unregister_channel(self, chan: discord.server.Channel) -> None:
         idd = chan.id
-        self.get_cursor().execute(f"DELETE FROM global_channels WHERE channel_id=:id", {"id": idd})
+        self.unregister_channel_id(idd)
+
+    def unregister_channel_id(self,id):
+        self.get_cursor().execute(f"DELETE FROM global_channels WHERE channel_id=:id", {"id": id})
         self.sqlite.commit()
 
     def registered(self, srv: discord.server.Server) -> None:
@@ -110,6 +113,8 @@ class GloDB:
             cid = row[0]
             sid = row[1]
             chanel = Globey.client.get_server(str(sid)).get_channel(str(cid))
+            if chanel is None:
+                self.unregister_channel_id(chanel)
             channels.append(chanel)
         return channels
 

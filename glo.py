@@ -2,6 +2,7 @@
 import os.path
 from subprocess import call
 import argparse
+import atexit
 import shutil
 
 """
@@ -11,6 +12,7 @@ dockervars = '-e GLOBEY_TOKEN='
 dockerpath = "/usr/bin/docker"
 windockerpath = "C:\Program Files\Docker Toolbox\docker.exe"
 imagename = "globey"
+contname = "globey"
 
 tokenfile = ".glo-token"
 
@@ -31,6 +33,14 @@ testing = bool(args.testing)
 action = args.action
 
 
+def onExit():
+    cmd = f"docker rm -f {contname}"
+    call(cmd.split(" "))
+
+
+atexit.register(onExit)
+
+
 def build():
     print(f"building image {imagename}")
     current = os.getcwd()
@@ -40,6 +50,7 @@ def build():
 
 
 def run():
+    onExit()
     if not os.path.exists(os.curdir + "/storage"):
         os.mkdir(os.getcwd() + "/storage/")
 
@@ -48,7 +59,7 @@ def run():
         print("win")
         sto = sto.replace("\\", "/")
         sto = sto.replace("C:", "/c")
-    cmd = f"docker run -v {sto}:/storage/ {dockervars} --rm -ti {imagename}"
+    cmd = f"docker run --name {contname} -v {sto}:/storage/ {dockervars} --rm -ti {imagename}"
     print("calling : " + cmd)
     call(cmd.split(" "))
 
@@ -70,7 +81,7 @@ switcher = {
 
 
 def readToken(param):
-    file = open(param,"r")
+    file = open(param, "r")
     return file.readline()
 
 

@@ -15,6 +15,7 @@ everyhere = re.compile("(@)(everyone|here)")
 
 linkreg = re.compile("(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?")
 
+
 class GlobalChat:
     @command(pass_context=True)
     async def globaldef(self, ctx):
@@ -34,7 +35,7 @@ class GlobalChat:
         channel = ctx.message.channel
         DB.unregister_channel(channel)
 
-    async def filterMessage(self,content: str):
+    async def filterMessage(self, content: str):
         matchobj = mentionreg.search(content)
         if matchobj is not None:
             toreplace = matchobj.group()
@@ -64,10 +65,10 @@ class GlobalChat:
         return content
 
     # @client.event
-    async def on_message(self, message : discord.client.Message):
+    async def on_message(self, message: discord.client.Message):
         if DB.is_global(message.channel):
             cmds = client.commands.keys()
-            if not str(message.content).startswith(client.command_prefix)\
+            if not str(message.content).startswith(client.command_prefix) \
                     and not \
                     cmds.__contains__(str(message.content).replace(client.command_prefix, "", 1)):
                 filtered = await self.filterMessage(message.content)

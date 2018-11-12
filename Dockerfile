@@ -18,4 +18,6 @@ ADD Globey /app/Globey
 
 ADD reactions.ini /app/
 
+ADD .admins /app/
+
 ADD globes /app/globes
