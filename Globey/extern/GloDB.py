@@ -113,10 +113,10 @@ class GloDB:
             cid = row[0]
             sid = row[1]
             srv = Globey.client.get_server(str(sid))
-            chanel = srv.get_channel(str(cid))
             if srv is None:
                 self.delete_server(sid)
                 continue
+            chanel = srv.get_channel(str(cid))
             if chanel is None:
                 self.unregister_channel_id(chanel)
                 continue
