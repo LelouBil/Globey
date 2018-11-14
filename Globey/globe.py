@@ -3,10 +3,8 @@ import Globey
 import Globey.control as control
 import discord.ext.commands
 
-client = Globey.client
 
-
-@client.group(pass_context=True)
+@discord.ext.commands.group(pass_context=True)
 async def globe(ctx: discord.ext.commands.Context):
     if not control.isAdmin(str(ctx.message.author.id)):
         return
@@ -15,22 +13,22 @@ async def globe(ctx: discord.ext.commands.Context):
 
 
 @globe.command(pass_context=True)
-async def load(ctx,extension_name: str):
+async def load(ctx, extension_name: str):
     """Loads an extension."""
     if not control.isAdmin(str(ctx.message.author.id)):
         return
     try:
-        client.load_extension(Globey.cogs_dir + "." + extension_name.lower())
+        Globey.client.load_extension(Globey.cogs_dir + "." + extension_name.lower())
     except (AttributeError, ImportError) as e:
-        await client.say("```py\n{}: {}\n```".format(type(e).__name__, str(e)))
+        await Globey.client.say("```py\n{}: {}\n```".format(type(e).__name__, str(e)))
         return
-    await client.say("{} loaded.".format(extension_name))
+    await Globey.client.say("{} loaded.".format(extension_name))
 
 
 @globe.command(pass_context=True)
-async def unload(ctx,extension_name: str):
+async def unload(ctx, extension_name: str):
     """Unloads an extension."""
     if not control.isAdmin(str(ctx.message.author.id)):
         return
-    client.unload_extension(Globey.cogs_dir + "." + extension_name.lower())
-    await client.say("{} unloaded.".format(extension_name))
+    Globey.client.unload_extension(Globey.cogs_dir + "." + extension_name.lower())
+    await Globey.client.say("{} unloaded.".format(extension_name))
