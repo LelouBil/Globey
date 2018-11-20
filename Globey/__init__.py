@@ -67,7 +67,7 @@ async def on_ready():
         log.debug("Checking : " + c.name + "@" + c.server.name)
         await globes.globalchat.GlobalChat.ensureWebHook(c.id)
     log.info("Updating server count")
-    update_counter()
+    await update_counter()
     log.info("Waiting %s seconds",initTime)
     time.sleep(initTime)
     await client.change_presence(status=discord.Status.online)
@@ -78,23 +78,23 @@ async def on_ready():
 async def on_server_join(server):
     log.info("Bot has joined server %s", server.name)
     DB.register_server(server)
-    update_counter(1)
+    await update_counter(1)
 
 
-def update_counter(param: int = 0):
+async def update_counter(param: int = 0):
     global counter
     if counter == 0:
         counter = len(client.servers)
     else:
         counter += param
-    client.change_presence(game=discord.Game(name=f"linking people on {counter} servers"))
+    await client.change_presence(game=discord.Game(name=f"linking people on {counter} server{'s' if counter > 1 else ''}"))
 
 
 @client.event
 async def on_server_remove(server):
     log.info("Bot removed from server %s", server.name)
     DB.delete_server(int(server.id))
-    update_counter(-1)
+    await update_counter(-1)
 
 
 log.info("Loading extentions...")

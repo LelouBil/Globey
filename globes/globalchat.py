@@ -169,7 +169,12 @@ class GlobalChat:
                     for i in channel:
                         if i.type != discord.channel.ChannelType.private:
                             try:
-                                await client.send_message(i, f"**[{message.author}@{message.server}]** {filtered}")
+                                # await client.send_message(i, f"**[{message.author}@{message.server}]** {filtered}")
+                                hook = await GlobalChat.getwebhook(i.id)
+                                name = message.author.name + "@[" + message.server.name + "]"
+                                content = filtered
+                                av = message.author.avatar_url
+                                hook.send_message(name, content, av)
                             except discord.errors.Forbidden:
                                 print(f"forbidden channel : {i.name}@{i.server.name}")
 
@@ -185,6 +190,13 @@ class WebHook:
 
     def getname(self):
         pass  # todo
+
+    def send_message(self, name: str, message: str, avatar: str):
+        apicall.post_endpoint(f"webhooks/{self.id}/{self.token}", {
+            "content": message,
+            "avatar_url": avatar,
+            "username": name
+        })
 
 
 def setup(bot):
