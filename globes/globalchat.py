@@ -7,6 +7,8 @@ import Globey.apicall as apicall
 import globes
 import json
 
+from globes import ServerAdmin, globaladmin
+
 client = Globey.client
 command = discord.ext.commands.command
 
@@ -102,6 +104,7 @@ class GlobalChat:
         return WebHook(id, token)
 
     @command(pass_context=True)
+    @ServerAdmin.only_admin()
     async def globaldef(self, ctx):
         if DB.is_global(ctx.message.channel):
             await client.say("This channel is already global !")
@@ -112,6 +115,7 @@ class GlobalChat:
         await self.addwebhook(channel.id)
 
     @command(pass_context=True)
+    @ServerAdmin.only_admin()
     async def globalstop(self, ctx):
         if not DB.is_global(ctx.message.channel):
             await client.say("This channel is not global !")
@@ -154,6 +158,8 @@ class GlobalChat:
     async def on_message(self, message: discord.client.Message):
         if DB.is_global(message.channel):
             cmds = client.commands.keys()
+            if globaladmin.is_muted(message.author.id):
+                return
             if not str(message.content).startswith(client.command_prefix) \
                     and not \
                     cmds.__contains__(str(message.content).replace(client.command_prefix, "", 1)):

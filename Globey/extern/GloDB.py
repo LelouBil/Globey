@@ -61,22 +61,24 @@ class GloDB:
         if server is discord.Server:
             server = server.id
 
-        if server is not int:
-            raise TypeError
         log.debug("Getting preference '%s' for '%s'", key, server)
         c = self.get_cursor()
-        c.execute("SELECT 1 FROM server_preferences WHERE server_id=? AND pref_key=?", {server, key})
-        return c.fetchone()[1]
+        c.execute("SELECT pref_value FROM server_preferences WHERE server_id=? AND pref_key=?", (server, key))
+        res = c.fetchone()
+        if res is None:
+            return ""
+        return res[0]
 
     def set_preference(self, server, key: str, value: str) -> None:
         if server is discord.Server:
             server = server.id
-
-        if server is not int:
-            raise TypeError
         log.debug("Setting preference '%s' to '%s' for '%s'", key, value, server)
-        self.get_cursor().execute("INSERT INTO server_preferences (pref_key,pref_value,server_id) VALUES (?,?,?)",
-                                  {key, value, server})
+        try:
+            self.get_cursor().execute("INSERT INTO server_preferences (pref_key,pref_value,server_id) VALUES (?,?,?)",
+                                  (str(key), str(value), str(server)))
+        except sqlite3.IntegrityError as e:
+            self.get_cursor().execute("UPDATE server_preferences SET pref_key=?, pref_value=?, server_id=?",
+                                      (str(key), str(value), str(server)))
         self.commit()
 
     def get_cursor(self) -> sqlite3.Cursor:
