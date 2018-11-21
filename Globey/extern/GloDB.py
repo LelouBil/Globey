@@ -3,6 +3,7 @@ import os
 import discord
 import Globey
 import logging
+from subprocess import check_output
 
 log = logging.getLogger(__name__)
 
@@ -12,35 +13,31 @@ class GloDB:
 
     def __init__(self):
         log.info("Initializing Database")
-        self.sqlite = sqlite3.connect("/storage/database.db" if not os.environ.get("GLOBEY_TEST") else "./storage"
-                                                                                                       "/database.db")
+
+        try:
+            os.remove(".temp.db")
+        except FileNotFoundError:
+            pass
+        tmp = sqlite3.connect(".temp.db")
+        cursor = tmp.cursor()
+        schema_file = open("schema.sql", "r+")
+        cursor.executescript(schema_file.read())
+        tmp.commit()
+
+        log.debug("Temp db initialized")
+
+        dbfile = "/storage/database.db" if not os.environ.get("GLOBEY_TEST") else "./storage/database.db"
+
+        cmd = f"sqldiff --transaction --schema {dbfile} .temp.db"
+        result = check_output(cmd.split(" "))
+        result = result.decode("utf-8")
+        log.debug("SQLDIFF OUTPUT : ")
+        log.debug(result)
+        self.sqlite = sqlite3.connect(dbfile)
         cursor = self.sqlite.cursor()
-        cursor.executescript("""
+        cursor.executescript(result)
+        self.sqlite.commit()
 
-        CREATE TABLE IF NOT EXISTS servers
-        (
-         `server_id`   int NOT NULL,
-         `server_name` text NOT NULL ,
-
-        PRIMARY KEY (`server_id`)
-        );
-        
-        CREATE TABLE IF NOT EXISTS global_channels (
-            channel_id integer NOT NULL,
-            server_id integer NOT NULL
-        , channel_name TEXT NOT NULL,
-        PRIMARY KEY (`channel_id`),
-        FOREIGN KEY(server_id) REFERENCES servers(server_id)
-        );
-        
-        CREATE TABLE IF NOT EXISTS server_preferences(
-            pref_key TEXT NOT NULL,
-            pref_value TEXT NOT NULL,
-            server_id integer NOT NULL,
-            FOREIGN KEY(server_id) REFERENCES servers(server_id),
-            PRIMARY KEY(pref_key,server_id)
-        );
-        """)
         log.info("Database initialized")
 
     def execute(self, query: str, opts: dict):
@@ -63,7 +60,7 @@ class GloDB:
 
         log.debug("Getting preference '%s' for '%s'", key, server)
         c = self.get_cursor()
-        c.execute("SELECT pref_value FROM server_preferences WHERE server_id=? AND pref_key=?", (server, key))
+        c.execute("SELECT pref_value FROM server_preferences WHERE server_id=? AND pref_key=?", (str(server), str(key)))
         res = c.fetchone()
         if res is None:
             return ""
@@ -75,10 +72,11 @@ class GloDB:
         log.debug("Setting preference '%s' to '%s' for '%s'", key, value, server)
         try:
             self.get_cursor().execute("INSERT INTO server_preferences (pref_key,pref_value,server_id) VALUES (?,?,?)",
-                                  (str(key), str(value), str(server)))
-        except sqlite3.IntegrityError as e:
-            self.get_cursor().execute("UPDATE server_preferences SET pref_key=?, pref_value=?, server_id=?",
                                       (str(key), str(value), str(server)))
+        except sqlite3.IntegrityError as e:
+            self.get_cursor().execute(
+                "UPDATE server_preferences SET pref_value=? WHERE main.server_preferences.pref_key=? AND main.server_preferences.server_id=?",
+                (str(value), str(key), str(server)))
         self.commit()
 
     def get_cursor(self) -> sqlite3.Cursor:

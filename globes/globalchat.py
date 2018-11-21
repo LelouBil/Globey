@@ -1,7 +1,7 @@
 from typing import Optional
 
 import discord.ext.commands
-
+import logging
 import Globey
 import Globey.apicall as apicall
 import globes
@@ -10,6 +10,7 @@ import json
 from globes import ServerAdmin, globaladmin
 
 client = Globey.client
+log = logging.getLogger("Global-Chat")
 command = discord.ext.commands.command
 
 DB = Globey.DB
@@ -60,9 +61,17 @@ class GlobalChat:
                        {"wid": id, "wtoken": token, "cid": channel})
             return True
         except apicall.ApiError as e:
-            client.say("an error occured")
-            print(e.stacktrace())
+            log.error(f"an error occured, cannot list webhooks of channel {channel}")
+            log.error(e.stacktrace())
+            client.send_message(channel, "Hey, for the new version of the Global chat I need the manage webhooks "
+                                         "permission for this channel !")
+            client.send_message(channel, "Please add it, and then do `globalstop` and `globaldef` again !")
             return False
+
+    @command(pass_context=True)
+    @ServerAdmin.only_admin()
+    async def nosend(self, ctx, b: bool):
+        DB.set_preference(ctx.message.channel.server.id, "nosend", str(b))
 
     @staticmethod
     async def addwebhook(channel: str):
@@ -112,7 +121,7 @@ class GlobalChat:
         await client.say("this channel is now set as a global channel")
         channel = ctx.message.channel  # here I get the channel
         DB.register_channel(channel)
-        await self.addwebhook(channel.id)
+        await self.ensureWebHook(channel.id)
 
     @command(pass_context=True)
     @ServerAdmin.only_admin()
@@ -169,6 +178,9 @@ class GlobalChat:
                     for i in channel:
                         if i.type != discord.channel.ChannelType.private:
                             try:
+                                if i.id == message.channel.id:
+                                    if DB.get_preference(message.server.id, "nosend") == "True":
+                                        continue
                                 # await client.send_message(i, f"**[{message.author}@{message.server}]** {filtered}")
                                 hook = await GlobalChat.getwebhook(i.id)
                                 name = message.author.name + "@[" + message.server.name + "]"
