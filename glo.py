@@ -44,6 +44,7 @@ debug = bool(args.debug)
 
 if testing:
     dvars["GLOBEY_LOGLEVEL"] = "INFO"
+    contname = "globey-testing"
 if debug:
     dvars["GLOBEY_LOGLEVEL"] = "DEBUG"
 action = args.action
