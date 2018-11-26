@@ -95,7 +95,10 @@ class GlobalChat:
 
     @staticmethod
     async def delwebhook(channel: str):
-        id = (await GlobalChat.getwebhook(channel)).id
+        wh = await GlobalChat.getwebhook(channel)
+        if wh is None:
+            return
+        id = wh.id
         DB.execute("UPDATE global_channels SET webhook_id=:wid, webhook_token=:wtoken WHERE channel_id=:cid",
                    {"wid": 0, "wtoken": 0, "cid": channel})
         try:
