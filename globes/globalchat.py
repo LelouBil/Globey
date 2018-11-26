@@ -197,7 +197,7 @@ class GlobalChat:
                             except discord.errors.Forbidden:
                                 print(f"forbidden channel : {i.name}@{i.server.name}")
                             except Globey.apicall.ApiError:
-                                await client.send_message(i, f"**[{message.author]]** {filtered}")
+                                await client.send_message(i, f"**[{message.author}]** {filtered}")
 
 
 class WebHook:
