@@ -71,6 +71,7 @@ async def on_ready():
     log.info("Waiting %s seconds", initTime)
     time.sleep(initTime)
     await client.change_presence(status=discord.Status.online)
+    await update_counter()
     log.info("Bot is online")
 
 

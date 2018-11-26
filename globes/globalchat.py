@@ -190,14 +190,14 @@ class GlobalChat:
                                     if DB.get_preference(message.server.id, "nosend") == "True":
                                         continue
                                 hook = await GlobalChat.getwebhook(i.id)
-                                name = message.author.name + "@[" + message.server.name + "]"
+                                name = str(message.autthor)
                                 content = filtered
                                 av = message.author.avatar_url
                                 hook.send_message(name, content, av)
                             except discord.errors.Forbidden:
                                 print(f"forbidden channel : {i.name}@{i.server.name}")
                             except Globey.apicall.ApiError:
-                                await client.send_message(i, f"**[{message.author}@{message.server}]** {filtered}")
+                                await client.send_message(i, f"**[{message.author]]** {filtered}")
 
 
 class WebHook:
