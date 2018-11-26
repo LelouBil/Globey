@@ -6,7 +6,7 @@ command = discord.ext.commands.command
 
 
 class Game:
-    @command(pass_context=True)
+    # @command(pass_context=True)
     async def start(self,ctx):
         await client.say(
             "**This is a RPG dueling mode game:**\n *to pick a class do `_select[class name]` Ex: `_selectdemonhunter`* **\n Exorcist \n Mage \n Necromancer \n Wizard \n Samurai \n Demon Hunter \n ***!Warning!***  you can't change your class**")

@@ -1,7 +1,12 @@
 import discord.ext.commands
 
+helpText: str = open("helptext.txt").readlines()
+
 
 class GlobeyHelpFormatter(discord.ext.commands.HelpFormatter):
+
+    def format(self):
+        return helpText
 
     def get_ending_note(self):
         command_name = self.context.invoked_with

@@ -7,6 +7,11 @@ command = discord.ext.commands.command
 
 
 class Info:
+
+    @command(pass_context=True)
+    async def ping(self,ctx):
+        await client.say('Pong! :robot:')
+
     @command(pass_context=True)
     async def userinfo(self,ctx, user: discord.User):  # notice how i added for mentioning user
         embed = discord.Embed(title="User Info for {}".format(user.name), color=user.color)
@@ -22,8 +27,13 @@ class Info:
         await client.say(embed=embed)
 
     @command(pass_context=True)
-    async def ping(self,ctx):
-        await client.say('Pong! :robot:')
+    async def server(self, ctx):
+        await client.say("https://discord.gg/3PPhfsf")
+
+    @command(pass_context=True)
+    async def invite(self, ctx):
+        await client.say(
+            "https://discordapp.com/api/oauth2/authorize?client_id=456478882577645568&permissions=8&scope=bot")
 
 
 def setup(bot):

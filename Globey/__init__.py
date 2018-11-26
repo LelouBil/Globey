@@ -68,7 +68,7 @@ async def on_ready():
         await globes.globalchat.GlobalChat.ensureWebHook(c.id)
     log.info("Updating server count")
     await update_counter()
-    log.info("Waiting %s seconds",initTime)
+    log.info("Waiting %s seconds", initTime)
     time.sleep(initTime)
     await client.change_presence(status=discord.Status.online)
     log.info("Bot is online")
@@ -87,7 +87,8 @@ async def update_counter(param: int = 0):
         counter = len(client.servers)
     else:
         counter += param
-    await client.change_presence(game=discord.Game(name=f"linking people on {counter} server{'s' if counter > 1 else ''}"))
+    await client.change_presence(
+        game=discord.Game(name=f"linking people on {counter} server{'s' if counter > 1 else ''}"))
 
 
 @client.event
@@ -98,14 +99,20 @@ async def on_server_remove(server):
 
 
 log.info("Loading extentions...")
-for extension in [f.replace('.py', '') for f in listdir(cogs_dir) if isfile(join(cogs_dir, f))]:
-    try:
-        log.info("Loading %s", cogs_dir + "." + extension)
-        client.load_extension(cogs_dir + "." + extension)
-        log.debug("Loaded")
-    except Exception as e:
-        log.error(f'Failed to load extension {extension}.')
-        traceback.print_exc()
-
+file = "globes.default"
+log.debug("Filename : " + file)
+with open(file, "r+") as f:
+    for line in f:
+        line = line.replace("\n", "")
+        if line.startswith("#"):
+            log.info("Skipping disabled module " + line)
+            continue
+        log.debug("Loading module : " + line)
+        try:
+            client.load_extension(cogs_dir + "." + line)
+            log.debug("Loaded")
+        except Exception as e:
+            log.error(f'Failed to load extension {line}.')
+            traceback.print_exc()
 log.info("Running client")
 client.run(token)

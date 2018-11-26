@@ -4,6 +4,7 @@ import discord.ext.commands
 import logging
 import Globey
 import Globey.apicall as apicall
+import requests
 import globes
 import json
 
@@ -63,9 +64,13 @@ class GlobalChat:
         except apicall.ApiError as e:
             log.error(f"an error occured, cannot list webhooks of channel {channel}")
             log.error(e.stacktrace())
-            client.send_message(channel, "Hey, for the new version of the Global chat I need the manage webhooks "
-                                         "permission for this channel !")
-            client.send_message(channel, "Please add it, and then do `globalstop` and `globaldef` again !")
+            await client.send_message(client.get_channel(channel),
+                                      "Hey, for the new version of the Global chat I need the **manage webhooks** "
+                                      "permission for this channel !" +
+                                      "\nPlease add it, and then do `_globalstop` and `_globaldef` again !" +
+                                      "\nYou can also just ignore this message, and the global chat will work the "
+                                      "same way as before."
+                                      )
             return False
 
     @command(pass_context=True)
@@ -181,7 +186,6 @@ class GlobalChat:
                                 if i.id == message.channel.id:
                                     if DB.get_preference(message.server.id, "nosend") == "True":
                                         continue
-                                # await client.send_message(i, f"**[{message.author}@{message.server}]** {filtered}")
                                 hook = await GlobalChat.getwebhook(i.id)
                                 name = message.author.name + "@[" + message.server.name + "]"
                                 content = filtered
@@ -189,6 +193,8 @@ class GlobalChat:
                                 hook.send_message(name, content, av)
                             except discord.errors.Forbidden:
                                 print(f"forbidden channel : {i.name}@{i.server.name}")
+                            except Globey.apicall.ApiError:
+                                await client.send_message(i, f"**[{message.author}@{message.server}]** {filtered}")
 
 
 class WebHook:

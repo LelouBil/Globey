@@ -1,0 +1,31 @@
+***__:wmario:HELP:wmario:__***
+
+*type _help to show this message*
+
+>*Globalchat:*
+```
+_globaldef (=activate the global chat)
+_globalstop (=deactivate the global chat)
+```
+>*Role Play Game:*
+```not yet available...```
+>*fun:*
+```
+_hi (=say hi to the bot)
+_master (=ask the bot if you are his master)
+_mood (=find out the bot's mood)
+```
+>*info:*
+```
+_ping (=show the bot speed)
+_userinfo (=display a pannel of information about an user)
+_server (=send an invite to the official bot server) 
+_invite (=send the bot invite)
+```
+>*server management:*
+```
+Admin-only commands:
+(You need either the Admin permission on the server or to have a custom role)
+_nosend <True|False> (=Should the bot send the messages back in the global channel ?)
+_setAdminRole <RoleId> (=Make all users who have this role able to do admin commands)
+```

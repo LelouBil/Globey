@@ -39,10 +39,10 @@ class ServerAdmin:
         DB.set_preference(server, "admin_role", role_id)
         client.say("Done !")
 
-    @command(pass_context=True)
+    # @command(pass_context=True)
     @only_admin()
     async def admincommand(self, ctx):
-        client.send_message(ctx.message.channel, "heya")
+        await client.send_message(ctx.message.channel, "heya")
 
 
 def setup(bot):
