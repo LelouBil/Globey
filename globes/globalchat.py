@@ -190,7 +190,7 @@ class GlobalChat:
                                     if DB.get_preference(message.server.id, "nosend") == "True":
                                         continue
                                 hook = await GlobalChat.getwebhook(i.id)
-                                name = str(message.autthor)
+                                name = str(message.author)
                                 content = filtered
                                 av = message.author.avatar_url
                                 hook.send_message(name, content, av)
