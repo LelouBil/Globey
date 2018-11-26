@@ -20,6 +20,10 @@ ADD Globey /app/Globey
 
 ADD reactions.ini /app/
 
+ADD helptext.txt /app/
+
+ADD globes.default /app/
+
 ADD .admins /app/
 
 ADD globes /app/globes
