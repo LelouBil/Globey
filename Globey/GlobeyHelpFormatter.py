@@ -1,12 +1,18 @@
 import discord.ext.commands
+import Globey
 
-helpText: str = open("helptext.txt").readlines()
+with open("helptext.txt") as c:
+    helpText: str = "".join(c.readlines())
+
 
 
 class GlobeyHelpFormatter(discord.ext.commands.HelpFormatter):
 
     def format(self):
-        return helpText
+        Globey.log.info("Emojii result")
+        import Globey.apicall as apicall
+        Globey.log.info(apicall.get_endpoint("/guilds/507651328428998676/emojis").content)
+        return [helpText]
 
     def get_ending_note(self):
         command_name = self.context.invoked_with

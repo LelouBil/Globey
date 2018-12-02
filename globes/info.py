@@ -35,6 +35,5 @@ class Info:
         await client.say(
             "https://discordapp.com/api/oauth2/authorize?client_id=456478882577645568&permissions=8&scope=bot")
 
-
 def setup(bot):
     bot.add_cog(Info())
