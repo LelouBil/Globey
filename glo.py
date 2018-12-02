@@ -10,7 +10,7 @@ glo helper script
 """
 dvars = {
     "GLOBEY_TOKEN": "",
-    "GLOBEY_LOGLEVEL": "WARN"
+    "GLOBEY_LOGLEVEL": "INFO"
 }
 dockerpath = "/usr/bin/docker"
 windockerpath = "C:\Program Files\Docker Toolbox\docker.exe"
