@@ -26,6 +26,8 @@ everyhere = re.compile("(@)(everyone|here)")
 
 linkreg = re.compile("(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?")
 
+globalLock = False
+
 
 class GlobalChat:
     @staticmethod
@@ -173,6 +175,8 @@ class GlobalChat:
 
     # @client.event
     async def on_message(self, message: discord.client.Message):
+        if globalLock:
+            return
         if DB.is_global(message.channel):
             cmds = client.commands.keys()
             if globaladmin.is_muted(message.author.id):
@@ -182,22 +186,25 @@ class GlobalChat:
                     cmds.__contains__(str(message.content).replace(client.command_prefix, "", 1)):
                 filtered = await self.filterMessage(message.content)
                 if not message.author.bot:
-                    channel = DB.get_global_channels()
-                    for i in channel:
-                        if i.type != discord.channel.ChannelType.private:
-                            try:
-                                if i.id == message.channel.id:
-                                    if DB.get_preference(message.server.id, "nosend") == "True":
-                                        continue
-                                hook = await GlobalChat.getwebhook(i.id)
-                                name = str(message.author)
-                                content = filtered
-                                av = message.author.avatar_url
-                                hook.send_message(name, content, av)
-                            except discord.errors.Forbidden:
-                                print(f"forbidden channel : {i.name}@{i.server.name}")
-                            except Globey.apicall.ApiError:
-                                await client.send_message(i, f"**[{message.author}]** {filtered}")
+                    await self.broadcast(filtered, message.author, message.channel)
+
+    async def broadcast(self, filtered, author: discord.Member, source: discord.Channel):
+        channel = DB.get_global_channels()
+        for i in channel:
+            if i.type != discord.channel.ChannelType.private:
+                try:
+                    if i.id == source.id:
+                        if DB.get_preference(source.server.id, "nosend") == "True":
+                            continue
+                    hook = await GlobalChat.getwebhook(i.id)
+                    name = str(author)
+                    content = filtered
+                    av = author.avatar_url
+                    hook.send_message(name, content, av)
+                except discord.errors.Forbidden:
+                    print(f"forbidden channel : {i.name}@{i.server.name}")
+                except Globey.apicall.ApiError:
+                    await client.send_message(i, f"**[{author}]** {filtered}")
 
 
 class WebHook:
