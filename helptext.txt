@@ -19,13 +19,13 @@ _mood (=find out the bot's mood)
 ```
 _ping (=show the bot speed)
 _userinfo (=display a pannel of information about an user)
-_server (=send an invite to the official bot server) 
+_guild (=send an invite to the official bot guild)
 _invite (=send the bot invite)
 ```
->*server management:*
+>*guild management:*
 ```
 Admin-only commands:
-(You need either the Admin permission on the server or to have a custom role)
+(You need either the Admin permission on the guild or to have a custom role)
 _nosend <True|False> (=Should the bot send the messages back in the global channel ?)
 _setAdminRole <RoleId> (=Make all users who have this role able to do admin commands)
 ```

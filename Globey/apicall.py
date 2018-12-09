@@ -10,7 +10,7 @@ basepath = "https://discordapp.com/api/v6/"
 useragent = "Globey ('http://discord.gg/invite/U4urVYr','1.0')"
 
 headers = {
-    'Authorization': "Bot " + Globey.token,
+    'Authorization': "Bot " + Globey._token,
     'user-agent': useragent
 }
 
@@ -18,7 +18,7 @@ headers = {
 def get_endpoint(endpoint: str, params=None):
     if params is None:
         params = {}
-    log.debug("GETting endpoint %s with %s",endpoint,params)
+    Globey.l().debug("GETting endpoint %s with %s", endpoint, params)
     rep = requests.get(basepath + endpoint, params=params, headers=headers)
     if not rep:
         raise ApiError(rep)
@@ -30,7 +30,7 @@ def post_endpoint(endpoint: str, data=None):
         data = {}
     hd = headers
     hd["content-type"] = "application/json"
-    log.debug("POSTing endpoint %s with %s", endpoint, data)
+    Globey.l().debug("POSTing endpoint %s with %s", endpoint, data)
     rep = requests.post(basepath + endpoint, json=data, headers=hd)
     if not rep:
         raise ApiError(rep)
@@ -38,7 +38,7 @@ def post_endpoint(endpoint: str, data=None):
 
 
 def delete_endpoint(endpoint: str):
-    log.debug("DELETEing endpoint %s",endpoint)
+    Globey.l().debug("DELETEing endpoint %s", endpoint)
     rep = requests.delete(basepath + endpoint)
     if not rep:
         raise ApiError(rep)
@@ -49,7 +49,7 @@ class ApiError(Exception):
     code: int
     rep: requests.Response
 
-    def __init__(self, rep : requests.Response):
+    def __init__(self, rep: requests.Response):
         self.code = rep.status_code
         self.rep = rep
 

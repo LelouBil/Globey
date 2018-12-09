@@ -8,12 +8,12 @@ command = discord.ext.commands.command
 
 class Info:
 
-    @command(pass_context=True)
-    async def ping(self,ctx):
-        await client.say('Pong! :robot:')
+    @command()
+    async def ping(self, ctx):
+        await ctx.send('Pong! :robot:')
 
-    @command(pass_context=True)
-    async def userinfo(self,ctx, user: discord.User):  # notice how i added for mentioning user
+    @command()
+    async def userinfo(self, ctx, user: discord.User):  # notice how i added for mentioning user
         embed = discord.Embed(title="User Info for {}".format(user.name), color=user.color)
         embed.add_field(name="Username:", value=user.name, inline=True)
         embed.add_field(name="User ID:", value=user.id, inline=True)
@@ -24,16 +24,17 @@ class Info:
         embed.add_field(name="Playing:", value=user.game)
         embed.add_field(name="Highest Role:", value=user.top_role, inline=True)
         embed.set_thumbnail(url=user.avatar_url)
-        await client.say(embed=embed)
+        await ctx.send(embed=embed)
 
-    @command(pass_context=True)
-    async def server(self, ctx):
-        await client.say("https://discord.gg/3PPhfsf")
+    @command()
+    async def guild(self, ctx):
+        await ctx.send("https://discord.gg/3PPhfsf")
 
-    @command(pass_context=True)
+    @command()
     async def invite(self, ctx):
-        await client.say(
+        await ctx.send(
             "https://discordapp.com/api/oauth2/authorize?client_id=456478882577645568&permissions=8&scope=bot")
+
 
 def setup(bot):
     bot.add_cog(Info())

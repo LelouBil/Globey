@@ -9,28 +9,28 @@ command = discord.ext.commands.command
 
 class Fun:
 
-    @command(pass_context=True)
+    @command()
     async def hi(self, ctx):
-        await client.say("**Hello, human**")
+        await ctx.send("**Hello, human**")
 
-    @command(pass_context=True, hidden=True)
+    @command(hidden=True)
     async def master(self, ctx):
         if Globey.control.isAdmin(ctx.message.author.id):
-            await client.say("Hi master :leaves:")
+            await ctx.send("Hi master :leaves:")
         else:
-            await client.say("Hey wait a minute, you aren't my master!!! :scream:")
+            await ctx.send("Hey wait a minute, you aren't my master!!! :scream:")
 
-    @command(pass_context=True)
+    @command()
     async def mood(self, ctx):
         mood = (random.choice([1, 2, 3, 4, ]))
         if mood == 1:
-            await client.say("*Angry*")
+            await ctx.send("*Angry*")
         elif mood == 2:
-            await client.say("*Annoyed*")
+            await ctx.send("*Annoyed*")
         elif mood == 3:
-            await client.say("*Happy*")
+            await ctx.send("*Happy*")
         elif mood == 4:
-            await client.say("*Sad*")
+            await ctx.send("*Sad*")
 
 
 def setup(bot: discord.ext.commands.Bot):

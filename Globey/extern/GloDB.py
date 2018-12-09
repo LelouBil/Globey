@@ -12,7 +12,7 @@ class GloDB:
     sqlite: sqlite3.Connection = None
 
     def __init__(self):
-        log.info("Initializing Database")
+        Globey.l().info("Initializing Database")
 
         try:
             os.remove(".temp.db")
@@ -24,151 +24,151 @@ class GloDB:
         cursor.executescript(schema_file.read())
         tmp.commit()
 
-        log.debug("Temp db initialized")
+        Globey.l().debug("Temp db initialized")
 
         dbfile = "/storage/database.db" if not os.environ.get("GLOBEY_TEST") else "./storage/database.db"
 
         cmd = f"sqldiff --transaction --schema {dbfile} .temp.db"
         result = check_output(cmd.split(" "))
         result = result.decode("utf-8")
-        log.debug("SQLDIFF OUTPUT : ")
-        log.debug(result)
+        Globey.l().debug("SQLDIFF OUTPUT : ")
+        Globey.l().debug(result)
         self.sqlite = sqlite3.connect(dbfile)
         cursor = self.sqlite.cursor()
         cursor.executescript(result)
         self.sqlite.commit()
 
-        log.info("Database initialized")
+        Globey.l().info("Database initialized")
 
     def execute(self, query: str, opts: dict):
         c = self.get_cursor()
-        log.debug("Executing %s", query)
+        Globey.l().debug("Executing %s", query)
         c.execute(query, opts)
         self.sqlite.commit()
 
     def fetch(self, query: str, opts: dict):
         c = self.get_cursor()
         c.execute(query, opts)
-        log.debug("Fetching %s", query)
+        Globey.l().debug("Fetching %s", query)
         self.sqlite.commit()
         return c.fetchall()
 
-    def get_preference(self, server, key: str) -> str:
+    def get_preference(self, guild, key: str) -> str:
 
-        if server is discord.Server:
-            server = server.id
+        if guild is discord.guild:
+            guild = guild.id
 
-        log.debug("Getting preference '%s' for '%s'", key, server)
+        Globey.l().debug("Getting preference '%s' for '%s'", key, guild)
         c = self.get_cursor()
-        c.execute("SELECT pref_value FROM server_preferences WHERE server_id=? AND pref_key=?", (str(server), str(key)))
+        c.execute("SELECT pref_value FROM guild_preferences WHERE guild_id=? AND pref_key=?", (str(guild), str(key)))
         res = c.fetchone()
         if res is None:
             return ""
         return res[0]
 
-    def set_preference(self, server, key: str, value: str) -> None:
-        if server is discord.Server:
-            server = server.id
-        log.debug("Setting preference '%s' to '%s' for '%s'", key, value, server)
+    def set_preference(self, guild, key: str, value: str) -> None:
+        if isinstance(guild, discord.Guild):
+            guild = guild.id
+        Globey.l().debug("Setting preference '%s' to '%s' for '%s'", key, value, guild)
         try:
-            self.get_cursor().execute("INSERT INTO server_preferences (pref_key,pref_value,server_id) VALUES (?,?,?)",
-                                      (str(key), str(value), str(server)))
+            self.get_cursor().execute("INSERT INTO guild_preferences (pref_key,pref_value,guild_id) VALUES (?,?,?)",
+                                      (str(key), str(value), str(guild)))
         except sqlite3.IntegrityError as e:
             self.get_cursor().execute(
-                "UPDATE server_preferences SET pref_value=? WHERE main.server_preferences.pref_key=? AND main.server_preferences.server_id=?",
-                (str(value), str(key), str(server)))
+                "UPDATE guild_preferences SET pref_value=? WHERE main.guild_preferences.pref_key=? AND main.guild_preferences.guild_id=?",
+                (str(value), str(key), str(guild)))
         self.commit()
 
     def get_cursor(self) -> sqlite3.Cursor:
         return self.sqlite.cursor()
 
     def commit(self) -> None:
-        log.debug("Database commit")
+        Globey.l().debug("Database commit")
         self.sqlite.commit()
 
-    def register_server(self, srv: discord.server.Server) -> None:
+    def register_guild(self, srv: discord.Guild) -> None:
         name = srv.name
         idd = srv.id
-        log.debug("Registering server (%s,%s", idd, name)
-        self.get_cursor().execute("INSERT INTO servers (server_id,server_name) VALUES (?,?)", (idd, name))
+        Globey.l().debug("Registering guild (%s,%s", idd, name)
+        self.get_cursor().execute("INSERT INTO guilds (guild_id,guild_name) VALUES (?,?)", (idd, name))
         self.commit()
 
-    def delete_server(self, srv: int) -> None:
-        log.debug("deleting : " + str(srv))
-        self.get_cursor().execute("DELETE FROM servers WHERE server_id=" + str(srv))
-        self.get_cursor().execute("DELETE FROM global_channels WHERE server_id=" + str(srv))
+    def delete_guild(self, srv: int) -> None:
+        Globey.l().debug("deleting : " + str(srv))
+        self.get_cursor().execute("DELETE FROM guilds WHERE guild_id=" + str(srv))
+        self.get_cursor().execute("DELETE FROM global_channels WHERE guild_id=" + str(srv))
         self.sqlite.commit()
 
-    def register_channel(self, chan: discord.server.Channel) -> None:
+    def register_channel(self, chan: discord.TextChannel) -> None:
         name = chan.name
         idd = chan.id
-        srvid = chan.server.id
-        log.debug("Registering global channel : (%s,%s)", idd, name)
+        srvid = chan.guild.id
+        Globey.l().debug("Registering global channel : (%s,%s)", idd, name)
         self.get_cursor().execute(
-            "INSERT INTO global_channels (channel_id,channel_name,server_id) VALUES (:id,:name,:srvid)",
+            "INSERT INTO global_channels (channel_id,channel_name,guild_id) VALUES (:id,:name,:srvid)",
             {"id": idd, "name": name, "srvid": srvid})
         self.commit()
 
-    def unregister_channel(self, chan: discord.server.Channel) -> None:
+    def unregister_channel(self, chan: discord.TextChannel) -> None:
         idd = chan.id
 
         self.unregister_channel_id(idd)
 
     def unregister_channel_id(self, id):
-        log.debug("Unregistering global channel : %s", id)
+        Globey.l().debug("Unregistering global channel : %s", id)
         self.get_cursor().execute(f"DELETE FROM global_channels WHERE channel_id=:id", {"id": id})
         self.sqlite.commit()
 
-    def registered(self, srv: discord.server.Server) -> bool:
+    def registered(self, srv: discord.Guild) -> bool:
         c = self.get_cursor()
 
-        c.execute(f"SELECT EXISTS(SELECT 1 FROM servers WHERE server_id={srv.id})")
+        c.execute(f"SELECT EXISTS(SELECT 1 FROM guilds WHERE guild_id={srv.id})")
         b = c.fetchone() == (1,)
-        log.debug("%s registered is ", b)
+        Globey.l().debug("%s registered is ", b)
         return b
 
-    def get_all_servers(self) -> list:
+    def get_all_guilds(self) -> list:
         c = self.get_cursor()
-        log.debug("Getting all servers")
-        c.execute("SELECT * FROM servers")
+        Globey.l().debug("Getting all guilds")
+        c.execute("SELECT * FROM guilds")
         rows = c.fetchall()
         for row in rows:
-            srv = Globey.client.get_server(str(row[0]))
+            srv = Globey.client.get_guild(row[0])
             if srv is None:
-                log.warn(str(row[0]) + " is None")
-                self.delete_server(row[0])
+                Globey.l().warn(str(row[0]) + " is None")
+                self.delete_guild(row[0])
                 continue
-            yield str(row[0])
+            yield row[0]
 
     def get_global_channels(self) -> list:
         c = self.get_cursor()
-        log.debug("Getting all global channels")
+        Globey.l().debug("Getting all global channels")
         c.execute("SELECT * FROM global_channels")
         rows = c.fetchall()
         channels = list()
         for row in rows:
             cid = row[0]
             sid = row[1]
-            srv : discord.Server = Globey.client.get_server(str(sid))
+            srv: discord.guild = Globey.client.get_guild(sid)
             if srv is None:
-                log.warn("Server %s is None", sid)
-                self.delete_server(sid)
+                Globey.l().warn("guild %s is None", sid)
+                self.delete_guild(sid)
                 continue
-            chanel : discord.Channel = srv.get_channel(str(cid))
+            chanel: discord.TextChannel = srv.get_channel(cid)
             if chanel is None:
-                log.warn("Channel %s is None", cid)
+                Globey.l().warn("Channel %s is None", cid)
                 self.unregister_channel_id(cid)
                 continue
             if not chanel.permissions_for(srv.get_member_named(Globey.name)).read_messages:
-                log.warn("Cannot read messages from channel %s, deleting",str(chanel))
+                Globey.l().warn("Cannot read messages from channel %s, deleting", str(chanel))
                 self.unregister_channel_id(cid)
                 continue
             channels.append(chanel)
         return channels
 
-    def is_global(self, channel: discord.channel.Channel) -> bool:
+    def is_global(self, channel: discord.TextChannel) -> bool:
         c = self.get_cursor()
         c.execute(f"SELECT EXISTS(SELECT 1 FROM global_channels WHERE channel_id={channel.id})")
         b = c.fetchone() == (1,)
-        log.debug("%s is_global %s", channel.id, b)
+        Globey.l().debug("%s is_global %s", channel.id, b)
         return b

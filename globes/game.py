@@ -6,34 +6,34 @@ command = discord.ext.commands.command
 
 
 class Game:
-    # @command(pass_context=True)
+    # @command()
     async def start(self,ctx):
-        await client.say(
+        await ctx.send(
             "**This is a RPG dueling mode game:**\n *to pick a class do `_select[class name]` Ex: `_selectdemonhunter`* **\n Exorcist \n Mage \n Necromancer \n Wizard \n Samurai \n Demon Hunter \n ***!Warning!***  you can't change your class**")
 
-        @command(pass_context=True)
+        @command()
         async def selectmage(self,ctx):
-            await client.say("you selected **Mage** class")
+            await ctx.send("you selected **Mage** class")
 
-        @command(pass_context=True)
+        @command()
         async def selectexorcist(self,ctx):
-            await client.say("you selected **Exorcist** class")
+            await ctx.send("you selected **Exorcist** class")
 
-        @command(pass_context=True)
+        @command()
         async def selectdemonhunter(self,ctx):
-            await client.say("you selected **Demon Hunter** class")
+            await ctx.send("you selected **Demon Hunter** class")
 
-        @command(pass_context=True)
+        @command()
         async def selectsamurai(self,ctx):
-            await client.say("you selected **Samurai** class")
+            await ctx.send("you selected **Samurai** class")
 
-        @command(pass_context=True)
+        @command()
         async def selectwizard(self,ctx):
-            await client.say("you selected **Wizard** class")
+            await ctx.send("you selected **Wizard** class")
 
-        @command(pass_context=True)
+        @command()
         async def selectnecromancer(self,ctx):
-            await client.say("you selected **Necromancer** class")
+            await ctx.send("you selected **Necromancer** class")
 
 
 def setup(bot):

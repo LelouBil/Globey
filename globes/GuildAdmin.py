@@ -10,10 +10,10 @@ DB = Globey.DB
 
 
 def is_admin(member: discord.Member):
-    srid = member.server.id
+    srid = member.guild.id
     roleid = DB.get_preference(srid, "admin_role")
     if roleid == "" or roleid == "0":
-        if member.server_permissions.administrator:
+        if member.guild_permissions.administrator:
             return True
         else:
             return False
@@ -30,20 +30,20 @@ def only_admin():
     return discord.ext.commands.check(predicate)
 
 
-class ServerAdmin:
+class GuildAdmin:
 
-    @command(pass_context=True)
+    @command()
     @has_permissions(administrator=True)
     async def setAdminRole(self, ctx: discord.ext.commands.Context, role_id: str):
-        server = ctx.message.author.server.id
-        DB.set_preference(server, "admin_role", role_id)
-        client.say("Done !")
+        guild = ctx.guild.id
+        DB.set_preference(guild, "admin_role", role_id)
+        await ctx.send("Done !")
 
-    # @command(pass_context=True)
+    # @command()
     @only_admin()
     async def admincommand(self, ctx):
         await client.send_message(ctx.message.channel, "heya")
 
 
 def setup(bot):
-    bot.add_cog(ServerAdmin())
+    bot.add_cog(GuildAdmin())

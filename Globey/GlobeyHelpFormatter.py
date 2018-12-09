@@ -5,7 +5,6 @@ with open("helptext.txt") as c:
     helpText: str = "".join(c.readlines())
 
 
-
 class GlobeyHelpFormatter(discord.ext.commands.HelpFormatter):
 
     def format(self):
@@ -20,7 +19,7 @@ class GlobeyHelpFormatter(discord.ext.commands.HelpFormatter):
 #     if message.content.startswith("help"):
 #         embed2 = discord.Embed(title="**Help menu**",
 #                                description=f"**Hello {message.author.name}, here are all comands (with prefix_):** \n"
-#                                            f"hi, invite, server, redriot, amiuseful, spam, invite. \n"
+#                                            f"hi, invite, guild, redriot, amiuseful, spam, invite. \n"
 #                                            f"**admin command:**\n"
 #                                            f"ban, warn, kick",
 #                                color=message.author.color)

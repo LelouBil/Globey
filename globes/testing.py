@@ -9,7 +9,7 @@ client = Globey.client
 
 class Testing:
 
-    @client.command(pass_context=True)
+    @client.command()
     async def testCommand(self, ctx: discord.ext.commands.Context):
         pass
 

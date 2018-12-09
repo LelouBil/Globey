@@ -8,7 +8,7 @@ import requests
 import globes
 import json
 
-from globes import ServerAdmin, globaladmin
+from globes import GuildAdmin, globaladmin
 
 client = Globey.client
 log = logging.getLogger("Global-Chat")
@@ -64,8 +64,8 @@ class GlobalChat:
                        {"wid": id, "wtoken": token, "cid": channel})
             return True
         except apicall.ApiError as e:
-            log.error(f"an error occured, cannot list webhooks of channel {channel}")
-            log.error(e.stacktrace())
+            Globey.l().error(f"an error occured, cannot list webhooks of channel {channel}")
+            Globey.l().error(e.stacktrace())
             await client.send_message(client.get_channel(channel),
                                       "Hey, for the new version of the Global chat I need the **manage webhooks** "
                                       "permission for this channel !" +
@@ -75,18 +75,18 @@ class GlobalChat:
                                       )
             return False
 
-    @command(pass_context=True)
-    @ServerAdmin.only_admin()
+    @command()
+    @GuildAdmin.only_admin()
     async def nosend(self, ctx, b: bool):
-        DB.set_preference(ctx.message.channel.server.id, "nosend", str(b))
+        DB.set_preference(ctx.message.channel.guild.id, "nosend", str(b))
 
     @staticmethod
     async def addwebhook(channel: str):
         try:
             rep = apicall.post_endpoint("/channels/" + channel + "/webhooks", data={"name": webhookName})
         except apicall.ApiError as e:
-            client.say("an error occured")
-            print(e.stacktrace())
+            await Globey.l().error("an error occured")
+            await Globey.l().error(e.stacktrace())
             return
         data = json.loads(rep.content)
         id = data["id"]
@@ -106,13 +106,13 @@ class GlobalChat:
         try:
             apicall.delete_endpoint("webhooks/" + str(id) + "/")
         except apicall.ApiError as e:
-            client.say("an error occured")
-            print(e.stacktrace())
+            Globey.l().error("an error occured")
+            Globey.l().error(e.stacktrace())
 
     @staticmethod
     async def getwebhook(channel: str):
-        if channel is discord.Channel:
-            channel = channel.id
+        if isinstance(channel, discord.TextChannel):
+            channel: int = channel.id
 
         rows = DB.fetch("SELECT webhook_id,webhook_token FROM global_channels WHERE channel_id = ?", (channel,))
         if len(rows) < 1:
@@ -122,24 +122,24 @@ class GlobalChat:
         token = row[1]
         return WebHook(id, token)
 
-    @command(pass_context=True)
-    @ServerAdmin.only_admin()
+    @command()
+    @GuildAdmin.only_admin()
     async def globaldef(self, ctx):
         if DB.is_global(ctx.message.channel):
-            await client.say("This channel is already global !")
+            await ctx.send("This channel is already global !")
             return
-        await client.say("this channel is now set as a global channel")
+        await ctx.send("this channel is now set as a global channel")
         channel = ctx.message.channel  # here I get the channel
         DB.register_channel(channel)
         await self.ensureWebHook(channel.id)
 
-    @command(pass_context=True)
-    @ServerAdmin.only_admin()
+    @command()
+    @GuildAdmin.only_admin()
     async def globalstop(self, ctx):
         if not DB.is_global(ctx.message.channel):
-            await client.say("This channel is not global !")
+            await ctx.send("This channel is not global !")
             return
-        await client.say("this channel is not anymore set as a global channel")
+        await ctx.send("this channel is not anymore set as a global channel")
         channel = ctx.message.channel
         DB.unregister_channel(channel)
         await self.delwebhook(channel.id)
@@ -150,7 +150,7 @@ class GlobalChat:
             toreplace = matchobj.group()
             id = matchobj.group(1)
             print("mention of : " + id + " ---- " + toreplace)
-            user = await client.get_user_info(str(id))
+            user = await client.get_user_info(id)
             username = str(user)
             content = content.replace(toreplace, username)
             # fin mentions
@@ -174,7 +174,7 @@ class GlobalChat:
         return content
 
     # @client.event
-    async def on_message(self, message: discord.client.Message):
+    async def on_message(self, message: discord.Message):
         if globalLock:
             return
         if DB.is_global(message.channel):
@@ -188,13 +188,13 @@ class GlobalChat:
                 if not message.author.bot:
                     await self.broadcast(filtered, message.author, message.channel)
 
-    async def broadcast(self, filtered, author: discord.Member, source: discord.Channel):
+    async def broadcast(self, filtered, author: discord.Member, source: discord.TextChannel):
         channel = DB.get_global_channels()
         for i in channel:
             if i.type != discord.channel.ChannelType.private:
                 try:
                     if i.id == source.id:
-                        if DB.get_preference(source.server.id, "nosend") == "True":
+                        if DB.get_preference(source.guild.id, "nosend") == "True":
                             continue
                     hook = await GlobalChat.getwebhook(i.id)
                     name = str(author)
@@ -202,13 +202,13 @@ class GlobalChat:
                     av = author.avatar_url
                     hook.send_message(name, content, av)
                 except discord.errors.Forbidden:
-                    print(f"forbidden channel : {i.name}@{i.server.name}")
+                    print(f"forbidden channel : {i.name}@{i.guild.name}")
                 except Globey.apicall.ApiError:
                     await client.send_message(i, f"**[{author}]** {filtered}")
 
 
 class WebHook:
-    id: str
+    id: int
     token: str
     name: str
 

@@ -12,7 +12,7 @@ DB = Globey.DB
 
 class Globaladmin:
 
-    @command(pass_context=True)
+    @command()
     @Globey.control.only_owner()
     async def globalmute(self, ctx, *, member: str):
         us = next(filter(lambda x: str(x) == member, client.get_all_members()), None)
@@ -23,7 +23,7 @@ class Globaladmin:
         except sqlite3.IntegrityError:
             await client.send_message(ctx.message.channel, "The user is already globally-muted !")
 
-    @command(pass_context=True)
+    @command()
     @Globey.control.only_owner()
     async def globalunmute(self, ctx, *,member: str):
         us = next(filter(lambda x: str(x) == member, client.get_all_members()), None)
@@ -32,7 +32,7 @@ class Globaladmin:
 
     @command()
     @Globey.control.only_owner()
-    async def globallock(self):
+    async def globallock(self,ctx):
         globes.globalchat.globalLock = True
         channel = DB.get_global_channels()
         for i in channel:
@@ -41,7 +41,7 @@ class Globaladmin:
 
     @command()
     @Globey.control.only_owner()
-    async def globalunlock(self):
+    async def globalunlock(self,ctx):
         globes.globalchat.globalLock = False
         channel = DB.get_global_channels()
         for i in channel:

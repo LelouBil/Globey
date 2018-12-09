@@ -8,15 +8,15 @@ import Globey.control
 
 class Control:
 
-    @command(pass_context=True, hidden=True)
+    @command(hidden=True)
     async def shutdown(self, ctx: discord.ext.commands.Context):
         if Globey.control.isAdmin(ctx.message.author):
-            await client.say("im shutting down, goodbye!")
+            await ctx.send("im shutting down, goodbye!")
             await client.logout()
         else:
-            await client.say("too bad that you are not the bot master")
+            await ctx.send("too bad that you are not the bot master")
 
-    @command(pass_context=True)
+    @command()
     async def hide(self, ctx, h: str):
         if Globey.control.isAdmin(ctx.message.author.id):
             if h:
