@@ -9,9 +9,6 @@ with open("helptext.txt") as c:
 class GlobeyHelpFormatter(discord.ext.commands.HelpFormatter):
 
     def format(self):
-        Globey.log.info("Emojii result")
-        import Globey.apicall as apicall
-        Globey.log.info(apicall.get_endpoint("/guilds/507651328428998676/emojis").content)
         return [helpText]
 
     def get_ending_note(self):

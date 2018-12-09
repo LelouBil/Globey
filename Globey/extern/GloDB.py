@@ -149,14 +149,18 @@ class GloDB:
         for row in rows:
             cid = row[0]
             sid = row[1]
-            srv = Globey.client.get_server(str(sid))
+            srv : discord.Server = Globey.client.get_server(str(sid))
             if srv is None:
                 log.warn("Server %s is None", sid)
                 self.delete_server(sid)
                 continue
-            chanel = srv.get_channel(str(cid))
+            chanel : discord.Channel = srv.get_channel(str(cid))
             if chanel is None:
                 log.warn("Channel %s is None", cid)
+                self.unregister_channel_id(cid)
+                continue
+            if not chanel.permissions_for(srv.get_member_named(Globey.name)).read_messages:
+                log.warn("Cannot read messages from channel %s, deleting",str(chanel))
                 self.unregister_channel_id(cid)
                 continue
             channels.append(chanel)
@@ -166,5 +170,5 @@ class GloDB:
         c = self.get_cursor()
         c.execute(f"SELECT EXISTS(SELECT 1 FROM global_channels WHERE channel_id={channel.id})")
         b = c.fetchone() == (1,)
-        log.warn("%s is_global %s", channel.id, b)
+        log.debug("%s is_global %s", channel.id, b)
         return b

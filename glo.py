@@ -10,6 +10,7 @@ glo helper script
 """
 dvars = {
     "GLOBEY_TOKEN": "",
+    "GLOBEY_USERNAME": "Globey#9271",
     "GLOBEY_LOGLEVEL": "INFO"
 }
 dockerpath = "/usr/bin/docker"
@@ -45,6 +46,7 @@ debug = bool(args.debug)
 if testing:
     dvars["GLOBEY_LOGLEVEL"] = "INFO"
     contname = "globey-testing"
+    dvars["GLOBEY_USERNAME"] = "Globey2#8320"
 if debug:
     dvars["GLOBEY_LOGLEVEL"] = "DEBUG"
 action = args.action

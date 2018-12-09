@@ -18,6 +18,7 @@ from Globey.extern.GloDB import GloDB
 cogs_dir = "globes"
 log = logging.getLogger(__name__)
 logLevel = logging._nameToLevel[os.getenv('GLOBEY_LOGLEVEL', 'INFO')]
+name = os.getenv("GLOBEY_USERNAME", 'Globey#9271')
 logging.basicConfig(level=logLevel)
 Client = discord.Client
 token = os.environ['GLOBEY_TOKEN']
