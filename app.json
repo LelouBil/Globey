@@ -1,0 +1,16 @@
+{
+  "name": "Globey",
+  "description": "A discord bot that links users !",
+  "scripts": {
+  },
+  "env": {
+  },
+  "formation": {
+  },
+  "addons": [
+
+  ],
+  "buildpacks": [
+
+  ]
+}
